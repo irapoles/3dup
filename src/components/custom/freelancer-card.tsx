@@ -42,15 +42,20 @@ export function FreelancerCard({ freelancer, assignedProjects = [] }: Freelancer
 
   async function handleDelete() {
     setPending(true);
-    const result = await deleteFreelancerAction(freelancer.id);
-    if (result.success) {
-      toast.success("Freelancer deleted");
-      setDeleteOpen(false);
-      router.refresh();
-    } else {
-      toast.error(result.error);
+    try {
+      const result = await deleteFreelancerAction(freelancer.id);
+      if (result?.success) {
+        toast.success("Freelancer deleted");
+        setDeleteOpen(false);
+        router.refresh();
+      } else {
+        toast.error(result?.error ?? "Failed to delete freelancer");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete freelancer");
+    } finally {
+      setPending(false);
     }
-    setPending(false);
   }
 
   return (

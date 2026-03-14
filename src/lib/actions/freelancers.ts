@@ -103,10 +103,19 @@ export async function updateFreelancerAction(
 export async function deleteFreelancerAction(
   freelancerId: string,
 ): Promise<ActionResult<null>> {
-  const admin = createAdminClient();
-  const { error } = await admin.auth.admin.deleteUser(freelancerId);
-  if (error) return { success: false, error: "Failed to delete freelancer" };
-  return { success: true, data: null };
+  try {
+    const admin = createAdminClient();
+    await admin.from("project_freelancers").delete().eq("freelancer_id", freelancerId);
+    await admin.from("notifications").delete().eq("user_id", freelancerId);
+    await admin.from("room_assets").update({ uploaded_by: null }).eq("uploaded_by", freelancerId);
+    const { error: profileError } = await admin.from("profiles").delete().eq("id", freelancerId);
+    if (profileError) return { success: false, error: `Profile: ${profileError.message}` };
+    const { error: authError } = await admin.auth.admin.deleteUser(freelancerId);
+    if (authError) return { success: false, error: authError.message };
+    return { success: true, data: null };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : "Failed to delete freelancer" };
+  }
 }
 
 export async function assignFreelancerAction(
