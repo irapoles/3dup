@@ -1,37 +1,94 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { createBrowserClient } from "@supabase/ssr";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TierSlotGroup } from "@/components/custom/tier-slot-group";
-import { createRoomAssetAction, deleteRoomAssetAction, reviewRoomAssetAction } from "@/lib/actions/room-assets";
+import { createRoomAssetAction, deleteRoomAssetAction, setRoomAssetStatusAction, type RoomAssetStatus } from "@/lib/actions/room-assets";
 import { ACCEPTED_IMAGE_TYPES } from "@/lib/schemas/file";
-import { Check, X } from "lucide-react";
+import { Check, CircleDot, ListTodo } from "lucide-react";
 import { toast } from "sonner";
 import type { Room, RoomAsset } from "@/types/database";
 
+const STATUS_LABEL: Record<RoomAssetStatus, string> = { to_do: "To do", in_review: "In review", approved: "Approved" };
+const STATUS_VARIANTS: Record<RoomAssetStatus, "secondary" | "default" | "outline"> = {
+  to_do: "secondary",
+  in_review: "outline",
+  approved: "default",
+};
+
 function RenderReviewButtons({ asset }: { asset: RoomAsset }) {
   const router = useRouter();
-  const handleReview = useCallback(async (status: "approved" | "rejected") => {
-    const result = await reviewRoomAssetAction(asset.id, status);
-    if (result.success) { toast.success(`Render ${status}`); router.refresh(); }
+  const setStatus = useCallback(async (status: RoomAssetStatus) => {
+    const result = await setRoomAssetStatusAction(asset.id, status);
+    if (result.success) { toast.success(STATUS_LABEL[status]); router.refresh(); }
     else toast.error(result.error);
   }, [asset.id, router]);
 
-  if (asset.status !== "pending") {
-    return <Badge variant={asset.status === "approved" ? "default" : "destructive"} className="text-[10px]">{asset.status}</Badge>;
-  }
   return (
-    <div className="flex gap-1">
-      <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => handleReview("approved")} title="Approve"><Check className="h-3 w-3 text-emerald-600" /></Button>
-      <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => handleReview("rejected")} title="Reject"><X className="h-3 w-3 text-destructive" /></Button>
+    <div className="flex items-center gap-1.5">
+      <Badge variant={STATUS_VARIANTS[asset.status]} className="text-[10px]">{STATUS_LABEL[asset.status]}</Badge>
+      <div className="flex gap-0.5">
+        {asset.status === "to_do" && (
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setStatus("in_review")} title="Mark in review"><CircleDot className="h-3 w-3" /></Button>
+        )}
+        {(asset.status === "to_do" || asset.status === "in_review") && (
+          <Button variant="ghost" size="icon" className="h-6 w-6 text-emerald-600" onClick={() => setStatus("approved")} title="Approve"><Check className="h-3 w-3" /></Button>
+        )}
+        {asset.status === "in_review" && (
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setStatus("to_do")} title="Back to to do"><ListTodo className="h-3 w-3" /></Button>
+        )}
+      </div>
     </div>
   );
 }
 
-export function RoomAccordions({ rooms, roomAssets, readOnly = false, showReview = false }: { rooms: Room[]; roomAssets: RoomAsset[]; readOnly?: boolean; showReview?: boolean }) {
+export function RoomAccordions({
+  rooms,
+  roomAssets: initialRoomAssets,
+  readOnly = false,
+  showReview = false,
+  roomIds = [],
+  highlightAssetId = null,
+}: {
+  rooms: Room[];
+  roomAssets: RoomAsset[];
+  readOnly?: boolean;
+  showReview?: boolean;
+  roomIds?: string[];
+  highlightAssetId?: string | null;
+}) {
+  const [roomAssets, setRoomAssets] = useState<RoomAsset[]>(initialRoomAssets);
+
+  useEffect(() => {
+    setRoomAssets(initialRoomAssets);
+  }, [initialRoomAssets]);
+
+  useEffect(() => {
+    if (roomIds.length === 0) return;
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    );
+    const channel = supabase
+      .channel("room_assets_live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "room_assets" }, (payload) => {
+        const row = payload.new as RoomAsset;
+        if (!roomIds.includes(row.room_id)) return;
+        setRoomAssets((prev) => {
+          const idx = prev.findIndex((a) => a.id === row.id);
+          if (payload.eventType === "DELETE") return prev.filter((a) => a.id !== (payload.old as { id: string }).id);
+          if (idx >= 0) return prev.map((a) => (a.id === row.id ? row : a));
+          return [...prev, row];
+        });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [roomIds]);
+
   if (rooms.length === 0) return <p className="py-8 text-center text-sm text-muted-foreground">No rooms defined.</p>;
 
   return (
@@ -69,6 +126,7 @@ export function RoomAccordions({ rooms, roomAssets, readOnly = false, showReview
                     onDeleted: async (assetId: string) => { await deleteRoomAssetAction(assetId); },
                     accept: ACCEPTED_IMAGE_TYPES,
                     showDelete: !readOnly,
+                    assetId: existing?.id,
                   };
                 })}
               />

@@ -224,7 +224,7 @@ export type Database = {
           file_size: number | null;
           asset_type: "render_t1" | "render_t2" | "render_t3";
           uploaded_by: string | null;
-          status: "pending" | "approved" | "rejected";
+          status: "to_do" | "in_review" | "approved";
           created_at: string;
         };
         Insert: {
@@ -235,7 +235,7 @@ export type Database = {
           file_size?: number | null;
           asset_type: "render_t1" | "render_t2" | "render_t3";
           uploaded_by?: string | null;
-          status?: "pending" | "approved" | "rejected";
+          status?: "to_do" | "in_review" | "approved";
           created_at?: string;
         };
         Update: {
@@ -246,7 +246,7 @@ export type Database = {
           file_size?: number | null;
           asset_type?: "render_t1" | "render_t2" | "render_t3";
           uploaded_by?: string | null;
-          status?: "pending" | "approved" | "rejected";
+          status?: "to_do" | "in_review" | "approved";
           created_at?: string;
         };
         Relationships: [

@@ -21,6 +21,7 @@ export async function createRoomAssetAction(input: {
     file_size: input.fileSize,
     asset_type: input.assetType,
     uploaded_by: user.id,
+    status: "to_do",
   });
 
   if (error) return { success: false, error: "Failed to save render" };
@@ -40,9 +41,11 @@ export async function deleteRoomAssetAction(
   return { success: true, data: null };
 }
 
-export async function reviewRoomAssetAction(
+export type RoomAssetStatus = "to_do" | "in_review" | "approved";
+
+export async function setRoomAssetStatusAction(
   assetId: string,
-  status: "approved" | "rejected",
+  status: RoomAssetStatus,
 ): Promise<ActionResult<null>> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -50,7 +53,7 @@ export async function reviewRoomAssetAction(
 
   const { data: asset } = await supabase
     .from("room_assets")
-    .select("uploaded_by, room_id")
+    .select("uploaded_by, room_id, file_name")
     .eq("id", assetId)
     .single();
 
@@ -61,13 +64,27 @@ export async function reviewRoomAssetAction(
 
   if (error) return { success: false, error: "Failed to update status" };
 
-  if (asset?.uploaded_by) {
+  if (asset?.uploaded_by && (status === "in_review" || status === "approved")) {
+    const { data: room } = await supabase.from("rooms").select("apartment_id").eq("id", asset.room_id).single();
+    const { data: apartment } = room ? await supabase.from("apartments").select("project_id").eq("id", room.apartment_id).single() : { data: null };
+    const projectId = apartment?.project_id;
+    const apartmentId = room?.apartment_id;
+    const link =
+      projectId && apartmentId
+        ? `/my-projects/${projectId}/apartments/${apartmentId}?highlight=${assetId}`
+        : null;
+    const assetLabel = asset.file_name || "Render";
+    const title = status === "approved" ? "Render approved" : "Render in review";
+    const body = status === "approved"
+      ? `"${assetLabel}" has been approved.`
+      : `"${assetLabel}" is now in review.`;
+
     await supabase.from("notifications").insert({
       user_id: asset.uploaded_by,
       type: `render_${status}`,
-      title: `Render ${status}`,
-      body: `Your render has been ${status}.`,
-      link: null,
+      title,
+      body,
+      link,
     });
   }
 

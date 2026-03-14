@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import { Bell } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -11,6 +12,8 @@ import type { Notification } from "@/types/database";
 
 export function NotificationBell({ userId, initialNotifications }: { userId: string; initialNotifications: Notification[] }) {
   const [notifications, setNotifications] = useState(initialNotifications);
+  const [open, setOpen] = useState(false);
+  const router = useRouter();
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   useEffect(() => {
@@ -27,13 +30,15 @@ export function NotificationBell({ userId, initialNotifications }: { userId: str
     return () => { supabase.removeChannel(channel); };
   }, [userId]);
 
-  async function handleMarkRead(id: string) {
-    await markNotificationReadAction(id);
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  async function handleClick(n: Notification) {
+    if (!n.read) await markNotificationReadAction(n.id);
+    setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
+    setOpen(false);
+    if (n.link) router.push(n.link);
   }
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative h-8 w-8">
           <Bell className="h-4 w-4" />
@@ -53,7 +58,8 @@ export function NotificationBell({ userId, initialNotifications }: { userId: str
             notifications.slice(0, 20).map((n) => (
               <button
                 key={n.id}
-                onClick={() => !n.read && handleMarkRead(n.id)}
+                type="button"
+                onClick={() => handleClick(n)}
                 className={cn("flex w-full flex-col gap-1 border-b px-4 py-3 text-left transition-colors last:border-0 hover:bg-muted/50", !n.read && "bg-accent/30")}
               >
                 <span className="text-xs font-medium">{n.title}</span>

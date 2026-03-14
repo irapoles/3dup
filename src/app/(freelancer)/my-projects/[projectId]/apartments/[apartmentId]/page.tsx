@@ -1,13 +1,22 @@
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { Separator } from "@/components/ui/separator";
 import { AssetThumbnail } from "@/components/custom/asset-thumbnail";
+import { HighlightRenderOnLoad } from "@/components/custom/highlight-render-on-load";
 import { RoomAccordions } from "@/app/(admin)/projects/[projectId]/apartments/[apartmentId]/room-accordions";
 import type { ApartmentAsset, Room, RoomAsset } from "@/types/database";
 
-export default async function FreelancerApartmentDetailPage({ params }: { params: Promise<{ projectId: string; apartmentId: string }> }) {
+export default async function FreelancerApartmentDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ projectId: string; apartmentId: string }>;
+  searchParams: Promise<{ highlight?: string }>;
+}) {
   const { projectId, apartmentId } = await params;
+  const { highlight: highlightAssetId } = await searchParams;
   const supabase = await createClient();
 
   const [{ data: project }, { data: apartment }, { data: assets }, { data: rooms }, { data: roomAssets }] = await Promise.all([
@@ -59,9 +68,17 @@ export default async function FreelancerApartmentDetailPage({ params }: { params
 
       <Separator className="my-8" />
       <section>
+        <Suspense fallback={null}>
+          <HighlightRenderOnLoad />
+        </Suspense>
         <h2 className="text-xl font-semibold leading-7">Rooms — Upload Renders</h2>
         <Separator className="my-4" />
-        <RoomAccordions rooms={roomList} roomAssets={roomAssetsList} />
+        <RoomAccordions
+          rooms={roomList}
+          roomAssets={roomAssetsList}
+          roomIds={roomList.map((r) => r.id)}
+          highlightAssetId={highlightAssetId ?? null}
+        />
       </section>
     </>
   );

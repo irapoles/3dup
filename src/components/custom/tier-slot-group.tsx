@@ -24,6 +24,8 @@ type TierSlotProps = {
   onDeleted?: (assetId: string) => Promise<void>;
   accept: string[];
   showDelete?: boolean;
+  /** Set to scroll/highlight this slot (e.g. from notification link) */
+  assetId?: string;
 };
 
 function TierSlot({
@@ -35,7 +37,10 @@ function TierSlot({
   onDeleted,
   accept,
   showDelete = true,
+  assetId,
 }: TierSlotProps) {
+  const Wrapper = assetId ? "div" : "div";
+  const wrapperProps = assetId ? { id: `asset-${assetId}`, "data-asset-id": assetId } : {};
   const { upload, state, progress, error, reset } = useUploadFile(storageBucket);
   const router = useRouter();
 
@@ -62,7 +67,7 @@ function TierSlot({
 
   if (existingAsset && state !== "uploading") {
     return (
-      <div>
+      <Wrapper {...wrapperProps}>
         <h4 className="mb-1.5 text-xs font-medium text-muted-foreground">{label}</h4>
         <AssetThumbnail
           fileName={existingAsset.file_name}
@@ -73,12 +78,12 @@ function TierSlot({
           onDelete={handleDelete}
           showDelete={showDelete}
         />
-      </div>
+      </Wrapper>
     );
   }
 
   return (
-    <div>
+    <Wrapper {...wrapperProps}>
       <h4 className="mb-1.5 text-xs font-medium text-muted-foreground">{label}</h4>
       <FileUploadZone
         state={state}
@@ -90,7 +95,7 @@ function TierSlot({
         compact
         hint={`Drop ${label.toLowerCase()}`}
       />
-    </div>
+    </Wrapper>
   );
 }
 

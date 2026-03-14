@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { ApartmentAssetsSection } from "./apartment-assets-section";
 import { RoomAccordions } from "./room-accordions";
 import { ApartmentActions } from "./apartment-actions";
+import type { Room } from "@/types/database";
 
 export default async function ApartmentDetailPage({ params }: { params: Promise<{ projectId: string; apartmentId: string }> }) {
   const { projectId, apartmentId } = await params;
@@ -33,7 +34,12 @@ export default async function ApartmentDetailPage({ params }: { params: Promise<
       <section>
         <h2 className="text-xl font-semibold leading-7">Rooms</h2>
         <Separator className="my-4" />
-        <RoomAccordions rooms={rooms ?? []} roomAssets={roomAssets ?? []} showReview />
+        <RoomAccordions
+          rooms={rooms ?? []}
+          roomAssets={roomAssets ?? []}
+          showReview
+          roomIds={((rooms ?? []) as Room[]).map((r) => r.id)}
+        />
       </section>
     </>
   );
