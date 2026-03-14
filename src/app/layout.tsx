@@ -9,6 +9,8 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
+const bodyClassName = `${inter?.className ?? ""} antialiased`.trim();
+
 export const metadata: Metadata = {
   title: "3DUp",
   description: "3D visualization asset management platform",
@@ -21,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} antialiased`}>
+      <body className={bodyClassName}>
         {children}
         <Toaster />
       </body>

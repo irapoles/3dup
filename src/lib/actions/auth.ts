@@ -24,6 +24,10 @@ export async function loginAction(
     return { success: false, error: "Please provide a valid email and password" };
   }
 
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return { success: false, error: "Server configuration error. Please try again later." };
+  }
+
   const supabase = await createClient();
 
   const { error } = await supabase.auth.signInWithPassword({
