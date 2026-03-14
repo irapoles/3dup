@@ -5,6 +5,9 @@ import { PageTransition } from "@/components/layout/page-transition";
 import { NotificationBell } from "@/components/custom/notification-bell";
 
 export async function FreelancerShell({ children }: { children: React.ReactNode }) {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    redirect("/login");
+  }
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");

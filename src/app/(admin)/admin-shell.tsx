@@ -4,6 +4,9 @@ import { AppSidebar } from "@/components/layout/app-sidebar";
 import { PageTransition } from "@/components/layout/page-transition";
 
 export async function AdminShell({ children }: { children: React.ReactNode }) {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    redirect("/login");
+  }
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
