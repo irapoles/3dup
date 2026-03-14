@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
-import { Separator } from "@/components/ui/separator";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ApartmentAssetsSection } from "./apartment-assets-section";
 import { RoomAccordions } from "./room-accordions";
 import { ApartmentActions } from "./apartment-actions";
@@ -30,17 +30,26 @@ export default async function ApartmentDetailPage({ params }: { params: Promise<
       />
       {apartment.description && <p className="mb-6 text-sm text-muted-foreground">{apartment.description}</p>}
       <ApartmentAssetsSection apartmentId={apartment.id} assets={assets ?? []} />
-      <Separator className="my-8" />
-      <section>
-        <h2 className="text-xl font-semibold leading-7">Rooms</h2>
-        <Separator className="my-4" />
-        <RoomAccordions
-          rooms={rooms ?? []}
-          roomAssets={roomAssets ?? []}
-          showReview
-          roomIds={((rooms ?? []) as Room[]).map((r) => r.id)}
-        />
-      </section>
+      <Accordion type="multiple" defaultValue={[]} className="mt-4 w-full space-y-2">
+        <AccordionItem value="rooms" className="rounded-lg border bg-card px-4 last:border-b-0">
+          <AccordionTrigger className="py-4 hover:no-underline">
+            <div className="flex w-full items-center justify-between pr-2">
+              <span className="text-base font-semibold">Rooms</span>
+              <span className="text-xs text-muted-foreground">
+                {(rooms ?? []).length} total
+              </span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="pb-6 pt-2">
+            <RoomAccordions
+              rooms={rooms ?? []}
+              roomAssets={roomAssets ?? []}
+              showReview
+              roomIds={((rooms ?? []) as Room[]).map((r) => r.id)}
+            />
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </>
   );
 }

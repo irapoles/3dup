@@ -152,3 +152,30 @@ export async function unassignFreelancerAction(
   if (error) return { success: false, error: "Failed to remove assignment" };
   return { success: true, data: null };
 }
+
+export async function reassignFreelancerAction(input: {
+  projectId: string;
+  fromFreelancerId: string;
+  toFreelancerId: string;
+}): Promise<ActionResult<null>> {
+  const supabase = await createClient();
+
+  const { error: unassignError } = await supabase
+    .from("project_freelancers")
+    .delete()
+    .eq("project_id", input.projectId)
+    .eq("freelancer_id", input.fromFreelancerId);
+
+  if (unassignError) return { success: false, error: "Failed to remove assignment" };
+
+  const { error: assignError } = await supabase.from("project_freelancers").insert({
+    project_id: input.projectId,
+    freelancer_id: input.toFreelancerId,
+  });
+
+  if (assignError) {
+    return { success: false, error: "Failed to assign freelancer" };
+  }
+
+  return { success: true, data: null };
+}

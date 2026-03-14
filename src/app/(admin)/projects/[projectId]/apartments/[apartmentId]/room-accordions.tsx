@@ -6,43 +6,66 @@ import { createBrowserClient } from "@supabase/ssr";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { TierSlotGroup } from "@/components/custom/tier-slot-group";
 import { createRoomAssetAction, deleteRoomAssetAction, setRoomAssetStatusAction, type RoomAssetStatus } from "@/lib/actions/room-assets";
 import { ACCEPTED_IMAGE_TYPES } from "@/lib/schemas/file";
-import { Check, CircleDot, ListTodo } from "lucide-react";
 import { toast } from "sonner";
 import type { Room, RoomAsset } from "@/types/database";
 
 const STATUS_LABEL: Record<RoomAssetStatus, string> = { to_do: "To do", in_review: "In review", approved: "Approved" };
-const STATUS_VARIANTS: Record<RoomAssetStatus, "secondary" | "default" | "outline"> = {
-  to_do: "secondary",
-  in_review: "outline",
-  approved: "default",
+const STATUS_COLORS: Record<RoomAssetStatus, string> = {
+  to_do: "bg-amber-400",
+  in_review: "bg-sky-400",
+  approved: "bg-emerald-400",
+};
+
+const RENDER_TIER_LABELS: Record<string, string> = {
+  render_t1: "Tier 1 — Standard",
+  render_t2: "Tier 2 — Affordable luxury",
+  render_t3: "Tier 3 — Luxury premium",
 };
 
 function RenderReviewButtons({ asset }: { asset: RoomAsset }) {
   const router = useRouter();
   const setStatus = useCallback(async (status: RoomAssetStatus) => {
+    if (status === asset.status) return;
     const result = await setRoomAssetStatusAction(asset.id, status);
     if (result.success) { toast.success(STATUS_LABEL[status]); router.refresh(); }
     else toast.error(result.error);
-  }, [asset.id, router]);
+  }, [asset.id, asset.status, router]);
 
   return (
-    <div className="flex items-center gap-1.5">
-      <Badge variant={STATUS_VARIANTS[asset.status]} className="text-[10px]">{STATUS_LABEL[asset.status]}</Badge>
-      <div className="flex gap-0.5">
-        {asset.status === "to_do" && (
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setStatus("in_review")} title="Mark in review"><CircleDot className="h-3 w-3" /></Button>
-        )}
-        {(asset.status === "to_do" || asset.status === "in_review") && (
-          <Button variant="ghost" size="icon" className="h-6 w-6 text-emerald-600" onClick={() => setStatus("approved")} title="Approve"><Check className="h-3 w-3" /></Button>
-        )}
-        {asset.status === "in_review" && (
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setStatus("to_do")} title="Back to to do"><ListTodo className="h-3 w-3" /></Button>
-        )}
-      </div>
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className="flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] text-muted-foreground hover:bg-muted"
+        >
+          <span
+            className={`h-2 w-2 rounded-full ${STATUS_COLORS[asset.status]}`}
+          />
+          <span>{STATUS_LABEL[asset.status]}</span>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-40">
+        {(["to_do", "in_review", "approved"] as RoomAssetStatus[]).map((status) => (
+          <DropdownMenuItem
+            key={status}
+            onClick={() => setStatus(status)}
+            className="flex items-center gap-2 text-xs"
+          >
+            <span className={`h-2 w-2 rounded-full ${STATUS_COLORS[status]}`} />
+            <span>{STATUS_LABEL[status]}</span>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -108,17 +131,17 @@ export function RoomAccordions({
                 <div className="mb-3 flex flex-wrap gap-2">
                   {assets.map((a) => (
                     <div key={a.id} className="flex items-center gap-2 rounded border px-2 py-1">
-                      <span className="text-xs text-muted-foreground">{a.asset_type.replace("render_t", "T")}</span>
+                      <span className="text-xs text-muted-foreground">{RENDER_TIER_LABELS[a.asset_type] ?? a.asset_type}</span>
                       <RenderReviewButtons asset={a} />
                     </div>
                   ))}
                 </div>
               )}
               <TierSlotGroup
-                slots={(["render_t1", "render_t2", "render_t3"] as const).map((type, i) => {
+                slots={(["render_t1", "render_t2", "render_t3"] as const).map((type) => {
                   const existing = assets.find((a) => a.asset_type === type);
                   return {
-                    label: `Tier ${i + 1}`,
+                    label: RENDER_TIER_LABELS[type],
                     storageBucket: "room-assets",
                     storagePath: `${room.id}/${type}`,
                     existingAsset: existing ? { id: existing.id, file_url: existing.file_url, file_name: existing.file_name, file_size: existing.file_size, asset_type: type } : undefined,

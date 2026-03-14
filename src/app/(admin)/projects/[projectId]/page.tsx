@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
-import { Separator } from "@/components/ui/separator";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ApartmentCard } from "@/components/custom/apartment-card";
 import { CreateApartmentDialog } from "@/components/custom/create-apartment-dialog";
 import { AssignFreelancerDialog } from "@/components/custom/assign-freelancer-dialog";
 import { EmptyState } from "@/components/custom/empty-state";
-import { Badge } from "@/components/ui/badge";
+import { AssignedFreelancerList } from "@/components/custom/assigned-freelancer-list";
 import { Home } from "lucide-react";
 import { BuildingAssetsSection } from "./building-assets-section";
 import { ProjectActions } from "./project-actions";
@@ -57,44 +57,81 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         actions={<ProjectActions projectId={project.id} project={project} />}
       />
 
-      <BuildingAssetsSection projectId={project.id} assets={assets ?? []} />
+      <Accordion
+        type="multiple"
+        defaultValue={[]}
+        className="w-full space-y-2"
+      >
+        <AccordionItem value="apartments" className="rounded-lg border bg-card px-4">
+          <AccordionTrigger className="py-4 hover:no-underline">
+            <div className="flex w-full items-center justify-between pr-2">
+              <span className="text-base font-semibold">Apartments</span>
+              <span className="text-xs text-muted-foreground">
+                {apartmentList.length} total
+              </span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="pb-6 pt-2">
+            <div className="mb-4 flex items-center justify-end">
+              <CreateApartmentDialog projectId={projectId} />
+            </div>
+            {apartmentList.length === 0 ? (
+              <EmptyState icon={Home} title="No apartments" description="Add apartments to this project." />
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                {apartmentList.map((apt) => {
+                  const aptRooms = apartmentRoomsMap.get(apt.id) ?? [];
+                  return (
+                    <ApartmentCard
+                      key={apt.id}
+                      apartment={apt}
+                      rooms={aptRooms}
+                      href={`/projects/${projectId}/apartments/${apt.id}`}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </AccordionContent>
+        </AccordionItem>
 
-      <Separator className="my-8" />
+        <AccordionItem value="building-assets" className="rounded-lg border bg-card px-4">
+          <AccordionTrigger className="py-4 hover:no-underline">
+            <div className="flex w-full items-center justify-between pr-2">
+              <span className="text-base font-semibold">Building Assets</span>
+              <span className="text-xs text-muted-foreground">Logo, images, video</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="pb-6 pt-2">
+            <BuildingAssetsSection projectId={project.id} assets={assets ?? []} />
+          </AccordionContent>
+        </AccordionItem>
 
-      <section>
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold leading-7">Freelancers</h2>
-          <AssignFreelancerDialog projectId={project.id} allFreelancers={freelancerList} assignedIds={assignedIds} />
-        </div>
-        <Separator className="my-4" />
-        {assignedFreelancers.length === 0 ? (
-          <p className="py-4 text-center text-sm text-muted-foreground">No freelancers assigned.</p>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {assignedFreelancers.map((f) => (<Badge key={f.id} variant="secondary" className="text-sm font-normal">{f.name} — {f.email}</Badge>))}
-          </div>
-        )}
-      </section>
-
-      <Separator className="my-8" />
-
-      <section>
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold leading-7">Apartments</h2>
-          <CreateApartmentDialog projectId={projectId} />
-        </div>
-        <Separator className="my-4" />
-        {apartmentList.length === 0 ? (
-          <EmptyState icon={Home} title="No apartments" description="Add apartments to this project." />
-        ) : (
-          <div className="grid grid-cols-2 gap-4">
-            {apartmentList.map((apt) => {
-              const aptRooms = apartmentRoomsMap.get(apt.id) ?? [];
-              return <ApartmentCard key={apt.id} apartment={apt} rooms={aptRooms} href={`/projects/${projectId}/apartments/${apt.id}`} />;
-            })}
-          </div>
-        )}
-      </section>
+        <AccordionItem value="freelancers" className="rounded-lg border bg-card px-4">
+          <AccordionTrigger className="py-4 hover:no-underline">
+            <div className="flex w-full items-center justify-between pr-2">
+              <span className="text-base font-semibold">Freelancers</span>
+              <span className="text-xs text-muted-foreground">
+                {assignedFreelancers.length} assigned
+              </span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="pb-6 pt-2">
+            <div className="mb-4 flex items-center justify-end">
+              <AssignFreelancerDialog
+                projectId={project.id}
+                allFreelancers={freelancerList}
+                assignedIds={assignedIds}
+              />
+            </div>
+            {assignedFreelancers.length === 0 ? (
+              <p className="py-4 text-center text-sm text-muted-foreground">No freelancers assigned.</p>
+            ) : (
+              <AssignedFreelancerList projectId={project.id} assigned={assignedFreelancers} />
+            )}
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </>
   );
 }

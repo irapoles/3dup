@@ -8,7 +8,7 @@ type PageHeaderProps = {
 
 export function PageHeader({ title, breadcrumbs, actions }: PageHeaderProps) {
   return (
-    <div className="mb-8">
+    <div className="mb-6">
       {breadcrumbs && breadcrumbs.length > 0 && (
         <div className="mb-2">
           <BreadcrumbNav segments={breadcrumbs} />

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
-import { Separator } from "@/components/ui/separator";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AssetThumbnail } from "@/components/custom/asset-thumbnail";
 import { HighlightRenderOnLoad } from "@/components/custom/highlight-render-on-load";
 import { RoomAccordions } from "@/app/(admin)/projects/[projectId]/apartments/[apartmentId]/room-accordions";
@@ -46,40 +46,85 @@ export default async function FreelancerApartmentDetailPage({
         ]}
       />
 
-      {blueprints.length > 0 && (
-        <section className="mb-6">
-          <h3 className="mb-2 text-sm font-medium">Blueprint</h3>
-          <div className="max-w-[250px]">
-            <AssetThumbnail fileName={blueprints[0].file_name} fileUrl={blueprints[0].file_url} fileSize={blueprints[0].file_size} assetType="blueprint" showDelete={false} />
-          </div>
-        </section>
-      )}
+      <Suspense fallback={null}>
+        <HighlightRenderOnLoad />
+      </Suspense>
+      <Accordion type="multiple" defaultValue={[]} className="w-full space-y-2">
+        <AccordionItem value="assets" className="rounded-lg border bg-card px-4 last:border-b-0">
+          <AccordionTrigger className="py-4 hover:no-underline">
+            <div className="flex w-full items-center justify-between pr-2">
+              <span className="text-base font-semibold">Assets</span>
+              <span className="text-xs text-muted-foreground">
+                {blueprints.length > 0 ? `${blueprints.length} uploaded` : "No assets"}
+              </span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="pb-6 pt-2">
+            {blueprints.length === 0 ? (
+              <p className="py-4 text-center text-sm text-muted-foreground">No assets yet.</p>
+            ) : (
+              <div className="flex flex-wrap gap-4">
+                {blueprints.map((a) => (
+                  <div key={a.id} className="w-[200px] shrink-0">
+                    <AssetThumbnail fileName={a.file_name} fileUrl={a.file_url} fileSize={a.file_size} assetType={a.asset_type} showDelete={false} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </AccordionContent>
+        </AccordionItem>
 
-      {moodboards.length > 0 && (
-        <section className="mb-6">
-          <h3 className="mb-2 text-sm font-medium">Moodboards</h3>
-          <div className="grid grid-cols-3 gap-4">
-            {moodboards.map((m) => (
-              <AssetThumbnail key={m.id} fileName={m.file_name} fileUrl={m.file_url} fileSize={m.file_size} assetType={m.asset_type} showDelete={false} />
-            ))}
-          </div>
-        </section>
-      )}
+        <AccordionItem value="moodboards" className="rounded-lg border bg-card px-4 last:border-b-0">
+          <AccordionTrigger className="py-4 hover:no-underline">
+            <div className="flex w-full items-center justify-between pr-2">
+              <span className="text-base font-semibold">Moodboards</span>
+              <span className="text-xs text-muted-foreground">
+                {moodboards.length} uploaded
+              </span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="pb-6 pt-2">
+            {moodboards.length === 0 ? (
+              <p className="py-4 text-center text-sm text-muted-foreground">No moodboards yet.</p>
+            ) : (
+              <div className="grid grid-cols-3 gap-4">
+                {([["moodboard_t1", "Tier 1 — Standard"], ["moodboard_t2", "Tier 2 — Affordable luxury"], ["moodboard_t3", "Tier 3 — Luxury premium"]] as const).map(([type, label]) => {
+                  const m = moodboards.find((a) => a.asset_type === type);
+                  return (
+                    <div key={type}>
+                      <h4 className="mb-1.5 text-xs font-medium text-muted-foreground">{label}</h4>
+                      {m ? (
+                        <AssetThumbnail fileName={m.file_name} fileUrl={m.file_url} fileSize={m.file_size} assetType={m.asset_type} showDelete={false} />
+                      ) : (
+                        <p className="rounded-lg border border-dashed bg-muted/30 py-6 text-center text-xs text-muted-foreground">No file</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </AccordionContent>
+        </AccordionItem>
 
-      <Separator className="my-8" />
-      <section>
-        <Suspense fallback={null}>
-          <HighlightRenderOnLoad />
-        </Suspense>
-        <h2 className="text-xl font-semibold leading-7">Rooms — Upload Renders</h2>
-        <Separator className="my-4" />
-        <RoomAccordions
-          rooms={roomList}
-          roomAssets={roomAssetsList}
-          roomIds={roomList.map((r) => r.id)}
-          highlightAssetId={highlightAssetId ?? null}
-        />
-      </section>
+        <AccordionItem value="rooms" className="rounded-lg border bg-card px-4 last:border-b-0">
+          <AccordionTrigger className="py-4 hover:no-underline">
+            <div className="flex w-full items-center justify-between pr-2">
+              <span className="text-base font-semibold">Rooms — Upload Renders</span>
+              <span className="text-xs text-muted-foreground">
+                {roomList.length} total
+              </span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="pb-6 pt-2">
+            <RoomAccordions
+              rooms={roomList}
+              roomAssets={roomAssetsList}
+              roomIds={roomList.map((r) => r.id)}
+              highlightAssetId={highlightAssetId ?? null}
+            />
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </>
   );
 }
