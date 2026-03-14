@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Separator } from "@/components/ui/separator";
 import { AssetThumbnail } from "@/components/custom/asset-thumbnail";
 import { RoomAccordions } from "@/app/(admin)/projects/[projectId]/apartments/[apartmentId]/room-accordions";
+import type { ApartmentAsset, Room, RoomAsset } from "@/types/database";
 
 export default async function FreelancerApartmentDetailPage({ params }: { params: Promise<{ projectId: string; apartmentId: string }> }) {
   const { projectId, apartmentId } = await params;
@@ -19,8 +20,11 @@ export default async function FreelancerApartmentDetailPage({ params }: { params
 
   if (!project || !apartment) notFound();
 
-  const blueprints = (assets ?? []).filter((a) => a.asset_type === "blueprint");
-  const moodboards = (assets ?? []).filter((a) => a.asset_type.startsWith("moodboard"));
+  const assetsList: ApartmentAsset[] = assets ?? [];
+  const blueprints = assetsList.filter((a) => a.asset_type === "blueprint");
+  const moodboards = assetsList.filter((a) => a.asset_type.startsWith("moodboard"));
+  const roomList: Room[] = rooms ?? [];
+  const roomAssetsList: RoomAsset[] = roomAssets ?? [];
 
   return (
     <>
@@ -57,7 +61,7 @@ export default async function FreelancerApartmentDetailPage({ params }: { params
       <section>
         <h2 className="text-xl font-semibold leading-7">Rooms — Upload Renders</h2>
         <Separator className="my-4" />
-        <RoomAccordions rooms={rooms ?? []} roomAssets={roomAssets ?? []} />
+        <RoomAccordions rooms={roomList} roomAssets={roomAssetsList} />
       </section>
     </>
   );

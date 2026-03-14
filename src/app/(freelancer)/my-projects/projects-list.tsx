@@ -3,29 +3,32 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/custom/empty-state";
 import { FolderOpen } from "lucide-react";
 import Link from "next/link";
+import type { Project } from "@/types/database";
 
 export async function FreelancerProjectsList() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: assignments } = await supabase
+  const { data: assignmentsData } = await supabase
     .from("project_freelancers")
     .select("project_id")
     .eq("freelancer_id", user.id);
 
-  if (!assignments || assignments.length === 0) {
+  const assignments: { project_id: string }[] = assignmentsData ?? [];
+  if (assignments.length === 0) {
     return <EmptyState icon={FolderOpen} title="No assigned projects" description="You will see projects here once an admin assigns you." />;
   }
 
   const projectIds = assignments.map((a) => a.project_id);
-  const { data: projects } = await supabase
+  const { data: projectsData } = await supabase
     .from("projects")
     .select("*")
     .in("id", projectIds)
     .order("created_at", { ascending: false });
 
-  if (!projects || projects.length === 0) {
+  const projects: Project[] = projectsData ?? [];
+  if (projects.length === 0) {
     return <EmptyState icon={FolderOpen} title="No projects found" description="Assigned projects may have been deleted." />;
   }
 

@@ -6,6 +6,7 @@ import { AssetThumbnail } from "@/components/custom/asset-thumbnail";
 import { ApartmentCard } from "@/components/custom/apartment-card";
 import { EmptyState } from "@/components/custom/empty-state";
 import { Home } from "lucide-react";
+import type { Apartment, ProjectAsset, Room } from "@/types/database";
 
 export default async function FreelancerProjectDetailPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
@@ -20,24 +21,28 @@ export default async function FreelancerProjectDetailPage({ params }: { params: 
 
   if (!project) notFound();
 
-  const apartmentRoomsMap = new Map<string, typeof rooms>();
-  (rooms ?? []).forEach((r) => {
+  const roomList: Room[] = rooms ?? [];
+  const apartmentRoomsMap = new Map<string, Room[]>();
+  roomList.forEach((r) => {
     const list = apartmentRoomsMap.get(r.apartment_id) ?? [];
     list.push(r);
     apartmentRoomsMap.set(r.apartment_id, list);
   });
 
+  const assetsList: ProjectAsset[] = assets ?? [];
+  const apartmentList: Apartment[] = apartments ?? [];
+
   return (
     <>
       <PageHeader title={project.name} breadcrumbs={[{ label: "My Projects", href: "/my-projects" }, { label: project.name }]} />
 
-      {(assets ?? []).length > 0 && (
+      {assetsList.length > 0 && (
         <>
           <section>
             <h2 className="text-xl font-semibold leading-7">Building Assets</h2>
             <Separator className="my-4" />
             <div className="grid grid-cols-4 gap-4">
-              {(assets ?? []).map((a) => (
+              {assetsList.map((a) => (
                 <AssetThumbnail key={a.id} fileName={a.file_name} fileUrl={a.file_url} fileSize={a.file_size} assetType={a.asset_type} showDelete={false} />
               ))}
             </div>
@@ -49,11 +54,11 @@ export default async function FreelancerProjectDetailPage({ params }: { params: 
       <section>
         <h2 className="text-xl font-semibold leading-7">Apartments</h2>
         <Separator className="my-4" />
-        {!apartments || apartments.length === 0 ? (
+        {apartmentList.length === 0 ? (
           <EmptyState icon={Home} title="No apartments" description="No apartments in this project." />
         ) : (
           <div className="grid grid-cols-2 gap-4">
-            {apartments.map((apt) => {
+            {apartmentList.map((apt) => {
               const aptRooms = apartmentRoomsMap.get(apt.id) ?? [];
               return <ApartmentCard key={apt.id} apartment={apt} rooms={aptRooms} href={`/my-projects/${projectId}/apartments/${apt.id}`} />;
             })}
