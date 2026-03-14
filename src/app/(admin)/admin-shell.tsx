@@ -20,9 +20,9 @@ export async function AdminShell({ children }: { children: React.ReactNode }) {
   if (profile?.role !== "admin") redirect("/my-projects");
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen flex-col lg:flex-row">
       <AppSidebar role="admin" />
-      <main className="flex-1 overflow-y-auto p-8">
+      <main className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
         <PageTransition>{children}</PageTransition>
       </main>
     </div>

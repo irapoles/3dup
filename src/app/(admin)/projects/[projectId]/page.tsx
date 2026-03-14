@@ -78,7 +78,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
             {apartmentList.length === 0 ? (
               <EmptyState icon={Home} title="No apartments" description="Add apartments to this project." />
             ) : (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {apartmentList.map((apt) => {
                   const aptRooms = apartmentRoomsMap.get(apt.id) ?? [];
                   return (

@@ -50,7 +50,7 @@ export default async function FreelancerProjectDetailPage({ params }: { params: 
             {assetsList.length === 0 ? (
               <p className="py-4 text-center text-sm text-muted-foreground">No building assets yet.</p>
             ) : (
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {assetsList.map((a) => (
                   <AssetThumbnail key={a.id} fileName={a.file_name} fileUrl={a.file_url} fileSize={a.file_size} assetType={a.asset_type} showDelete={false} />
                 ))}
@@ -72,7 +72,7 @@ export default async function FreelancerProjectDetailPage({ params }: { params: 
             {apartmentList.length === 0 ? (
               <EmptyState icon={Home} title="No apartments" description="No apartments in this project." />
             ) : (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {apartmentList.map((apt) => {
                   const aptRooms = apartmentRoomsMap.get(apt.id) ?? [];
                   return <ApartmentCard key={apt.id} apartment={apt} rooms={aptRooms} href={`/my-projects/${projectId}/apartments/${apt.id}`} />;

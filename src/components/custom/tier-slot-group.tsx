@@ -101,7 +101,7 @@ function TierSlot({
 
 export function TierSlotGroup({ slots }: { slots: Array<TierSlotProps> }) {
   return (
-    <div className="grid grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
       {slots.map((slot) => (
         <TierSlot key={slot.label} {...slot} />
       ))}

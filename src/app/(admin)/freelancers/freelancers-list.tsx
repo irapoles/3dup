@@ -22,7 +22,7 @@ export async function FreelancersList() {
   const projectMap = new Map(projectList.map((p) => [p.id, p.name]));
 
   return (
-    <div className="grid grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {freelancers.map((f) => {
         const assigned = assignments.filter((a) => a.freelancer_id === f.id).map((a) => ({ id: a.project_id, name: projectMap.get(a.project_id) ?? "Unknown" }));
         return <FreelancerCard key={f.id} freelancer={f} assignedProjects={assigned} />;

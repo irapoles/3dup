@@ -2,7 +2,6 @@
 
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Separator } from "@/components/ui/separator";
 import { FileUploadZone } from "@/components/custom/file-upload-zone";
 import { AssetThumbnail } from "@/components/custom/asset-thumbnail";
 import { useUploadFile } from "@/hooks/use-upload-file";
@@ -70,9 +69,7 @@ export function BuildingAssetsSection({ projectId, assets }: { projectId: string
 
   return (
     <section>
-      <h2 className="text-xl font-semibold leading-7">Building Assets</h2>
-      <Separator className="my-4" />
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <AssetSlot label="Logo" bucket="project-assets" path={`${projectId}/logo`} asset={logo} assetType="logo" accept={ACCEPTED_IMAGE_TYPES} onUploaded={(u, n, s) => handleUploaded(u, n, s, "logo")} onDeleted={handleDeleted} />
         <AssetSlot label="Image 1" bucket="project-assets" path={`${projectId}/images`} asset={images[0]} assetType="image" accept={ACCEPTED_IMAGE_TYPES} onUploaded={(u, n, s) => handleUploaded(u, n, s, "image")} onDeleted={handleDeleted} />
         <AssetSlot label="Image 2" bucket="project-assets" path={`${projectId}/images`} asset={images[1]} assetType="image" accept={ACCEPTED_IMAGE_TYPES} onUploaded={(u, n, s) => handleUploaded(u, n, s, "image")} onDeleted={handleDeleted} />

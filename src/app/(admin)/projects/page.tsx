@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function ProjectsPage() {
   return (
     <>
-      <PageHeader title="Projects" breadcrumbs={[{ label: "Projects" }]} actions={<CreateProjectDialog />} />
+      <PageHeader title="Your Projects" breadcrumbs={[{ label: "All projects" }]} actions={<CreateProjectDialog />} />
       <Suspense fallback={<div className="grid grid-cols-3 gap-4">{Array.from({ length: 6 }).map((_, i) => (<Skeleton key={i} className="h-[120px] rounded-lg" />))}</div>}>
         <ProjectsList />
       </Suspense>

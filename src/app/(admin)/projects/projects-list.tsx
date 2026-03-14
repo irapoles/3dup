@@ -19,7 +19,7 @@ export async function ProjectsList() {
   apartments.forEach((a) => countMap.set(a.project_id, (countMap.get(a.project_id) ?? 0) + 1));
 
   return (
-    <div className="grid grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {projects.map((p) => (<ProjectCard key={p.id} project={p} apartmentCount={countMap.get(p.id) ?? 0} />))}
     </div>
   );

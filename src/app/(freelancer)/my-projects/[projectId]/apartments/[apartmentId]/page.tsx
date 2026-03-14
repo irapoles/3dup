@@ -87,7 +87,7 @@ export default async function FreelancerApartmentDetailPage({
             {moodboards.length === 0 ? (
               <p className="py-4 text-center text-sm text-muted-foreground">No moodboards yet.</p>
             ) : (
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 {([["moodboard_t1", "Tier 1 — Standard"], ["moodboard_t2", "Tier 2 — Affordable luxury"], ["moodboard_t3", "Tier 3 — Luxury premium"]] as const).map(([type, label]) => {
                   const m = moodboards.find((a) => a.asset_type === type);
                   return (
