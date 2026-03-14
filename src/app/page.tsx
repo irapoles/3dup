@@ -1,7 +1,9 @@
+import Image from "next/image";
+
 export default function Home() {
   return (
     <main className="flex min-h-screen items-center justify-center">
-      <h1 className="text-2xl font-semibold leading-8 text-foreground">3DUp</h1>
+      <Image src="/logo.svg" alt="3DUp" width={240} height={100} className="h-16 w-auto object-contain" priority />
     </main>
   );
 }

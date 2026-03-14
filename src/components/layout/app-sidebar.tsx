@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { FolderOpen, Users, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -23,9 +24,9 @@ export function AppSidebar({ role }: { role: "admin" | "freelancer" }) {
 
   return (
     <aside className="flex h-screen w-60 flex-col border-r border-border bg-card">
-      <div className="flex h-14 items-center px-5">
-        <span className="text-xl font-semibold text-foreground">3DUp</span>
-      </div>
+      <Link href={role === "admin" ? "/projects" : "/my-projects"} className="flex h-14 items-center px-5">
+        <Image src="/logo.svg" alt="3DUp" width={120} height={50} className="h-8 w-auto object-contain object-left" priority />
+      </Link>
       <nav className="flex flex-1 flex-col gap-1 px-3 pt-2">
         {navItems.map((item) => {
           const isActive = pathname.startsWith(item.href);
