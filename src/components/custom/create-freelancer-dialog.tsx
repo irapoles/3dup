@@ -55,15 +55,20 @@ export function CreateFreelancerDialog() {
       return;
     }
 
-    const result = await createFreelancerAction(formData);
-    if (result.success) {
-      toast.success("Freelancer created");
-      setOpen(false);
-      router.refresh();
-    } else {
-      toast.error(result.error);
+    try {
+      const result = await createFreelancerAction(formData);
+      if (result?.success) {
+        toast.success("Freelancer created");
+        setOpen(false);
+        router.refresh();
+      } else {
+        toast.error(result?.error ?? "Failed to create freelancer");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to create freelancer");
+    } finally {
+      setPending(false);
     }
-    setPending(false);
   }
 
   return (

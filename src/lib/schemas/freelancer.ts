@@ -5,7 +5,7 @@ export const createFreelancerSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email format"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   phone: z.string().max(50).optional(),
-  website: z.string().url("Invalid URL").or(z.literal("")).optional(),
+  website: z.union([z.string().url("Invalid URL"), z.literal("")]).optional(),
   price: z.string().max(100).optional(),
 });
 

@@ -8,53 +8,57 @@ import type { ActionResult } from "@/types";
 export async function createFreelancerAction(
   formData: FormData,
 ): Promise<ActionResult<null>> {
-  const raw = {
-    name: formData.get("name") as string,
-    email: formData.get("email") as string,
-    password: formData.get("password") as string,
-    phone: (formData.get("phone") as string) || undefined,
-    website: (formData.get("website") as string) || undefined,
-    price: (formData.get("price") as string) || undefined,
-  };
+  try {
+    const raw = {
+      name: formData.get("name") as string,
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
+      phone: (formData.get("phone") as string) || undefined,
+      website: (formData.get("website") as string) || undefined,
+      price: (formData.get("price") as string) || undefined,
+    };
 
-  const parsed = createFreelancerSchema.safeParse(raw);
-  if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
-  }
-
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: "Not authenticated" };
-
-  const admin = createAdminClient();
-
-  const { data: authData, error: authError } =
-    await admin.auth.admin.createUser({
-      email: parsed.data.email,
-      password: parsed.data.password,
-      email_confirm: true,
-      user_metadata: {
-        role: "freelancer",
-        name: parsed.data.name,
-      },
-    });
-
-  if (authError) {
-    if (authError.message.includes("already been registered")) {
-      return { success: false, error: "Email is already registered" };
+    const parsed = createFreelancerSchema.safeParse(raw);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
     }
-    return { success: false, error: "Failed to create account" };
-  }
 
-  if (authData.user) {
-    await admin.from("profiles").update({
-      phone: parsed.data.phone ?? null,
-      website: parsed.data.website ?? null,
-      price: parsed.data.price ?? null,
-    }).eq("id", authData.user.id);
-  }
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Not authenticated" };
 
-  return { success: true, data: null };
+    const admin = createAdminClient();
+
+    const { data: authData, error: authError } =
+      await admin.auth.admin.createUser({
+        email: parsed.data.email,
+        password: parsed.data.password,
+        email_confirm: true,
+        user_metadata: {
+          role: "freelancer",
+          name: parsed.data.name,
+        },
+      });
+
+    if (authError) {
+      if (authError.message.includes("already been registered")) {
+        return { success: false, error: "Email is already registered" };
+      }
+      return { success: false, error: authError.message || "Failed to create account" };
+    }
+
+    if (authData.user) {
+      await admin.from("profiles").update({
+        phone: parsed.data.phone ?? null,
+        website: parsed.data.website ?? null,
+        price: parsed.data.price ?? null,
+      }).eq("id", authData.user.id);
+    }
+
+    return { success: true, data: null };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : "Failed to create freelancer" };
+  }
 }
 
 export async function updateFreelancerAction(
